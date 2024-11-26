@@ -1,3 +1,5 @@
+use std::io::Error;
+
 use clap::{Args, Parser, Subcommand};
 
 // Setup constants that control the neural network (NN)
@@ -15,29 +17,23 @@ const DEFAULT_PNG_INPUT_FILENAME: &str = "image.png";
 #[derive(Debug, Parser)]
 #[clap(about, version)]
 struct App {
-    #[clap(flatten)]
-    global_opts: GlobalOpts,
-
     #[clap(subcommand)]
-    command: Command,
-}
-
-#[derive(Debug, Args)]
-struct GlobalOpts {
-    #[arg(long, default_value_t = DEFAULT_INPUT_NODES, global = true)]
-    input_nodes: u16,
-
-    #[arg(long, default_value_t = DEFAULT_HIDDEN_NODES, global = true)]
-    hidden_nodes: u16,
-
-    #[arg(long, default_value_t = DEFAULT_OUTPUT_NODES, global = true)]
-    output_nodes: u16,
+    command: Commands,
 }
 
 #[derive(Debug, Subcommand)]
-enum Command {
+enum Commands {
     /// Train the neural network
     Train {
+        #[arg(long, default_value_t = DEFAULT_INPUT_NODES, global = true)]
+        input_nodes: u16,
+
+        #[arg(long, default_value_t = DEFAULT_HIDDEN_NODES, global = true)]
+        hidden_nodes: u16,
+
+        #[arg(long, default_value_t = DEFAULT_OUTPUT_NODES, global = true)]
+        output_nodes: u16,
+
         #[arg(long, default_value_t = DEFAULT_LEARNING_RATE)]
         learning_rate: f32,
 
@@ -70,25 +66,82 @@ enum Command {
     },
 }
 
-fn main() {
-    let app = App::parse();
-
-    println!("app args are {:?}", &app);
-    println!("app command is {:?}", &app.command)
-
+// Train the NN
+fn train(
+    input_nodes: u16,
+    hidden_nodes: u16,
+    output_nodes: u16,
+    learning_rate: f32,
+    mnist_training_data_csv_filename: &str,
+    num_training_epochs: u16,
+    model_output_filename: &str,
+) -> Result<(), Error> {
     // Create the NN
 
     // Load the training data CSV
 
-    // Train the NN
+    // Save the model
+
+    println!("train");
+    Ok(())
+}
+
+// Test the NN
+fn test(mnist_test_data_csv_filename: &str, model_input_filename: &str) -> Result<(), Error> {
+    // Load the model
+
+    // Create the NN
 
     // Load the test data CSV
 
-    // Test the NN
-
     // Calculate the performance score
 
-    // Infer a new handwritten digit
+    println!("test");
+    Ok(())
+}
 
-    // Read an image from an embedded camera and print the inferred digit to the display
+// Infer a new handwritten digit
+fn infer(model_input_filename: &str, png_input_filename: &str) -> Result<(), Error> {
+    // Load the model
+
+    // Create the NN
+
+    // Read an image and infer the digit
+
+    println!("infer");
+    Ok(())
+}
+
+fn main() -> Result<(), Error> {
+    let app = App::parse();
+
+    println!("app args are {:#?}", &app);
+
+    match &app.command {
+        Commands::Train {
+            input_nodes,
+            hidden_nodes,
+            output_nodes,
+            learning_rate,
+            mnist_training_data_csv_filename,
+            num_training_epochs,
+            model_output_filename,
+        } => train(
+            *input_nodes,
+            *hidden_nodes,
+            *output_nodes,
+            *learning_rate,
+            mnist_training_data_csv_filename,
+            *num_training_epochs,
+            model_output_filename,
+        ),
+        Commands::Test {
+            mnist_test_data_csv_filename,
+            model_input_filename,
+        } => test(mnist_test_data_csv_filename, model_input_filename),
+        Commands::Infer {
+            model_input_filename,
+            png_input_filename,
+        } => infer(model_input_filename, png_input_filename),
+    }
 }
