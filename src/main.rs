@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::io::Error;
 
 use clap::{Parser, Subcommand};
@@ -67,6 +68,18 @@ enum Commands {
     },
 }
 
+enum ConfigKind {
+    TRAIN,
+    TEST,
+    INFER,
+}
+
+trait Config {
+    fn kind(&self) -> ConfigKind;
+
+    fn as_any(&self) -> &dyn Any;
+}
+
 #[derive(Debug)]
 struct TrainConfig {
     input_nodes: u16,
@@ -76,6 +89,16 @@ struct TrainConfig {
     mnist_training_data_csv_filename: String,
     num_training_epochs: u16,
     model_output_filename: String,
+}
+
+impl Config for TrainConfig {
+    fn kind(&self) -> ConfigKind {
+        ConfigKind::TRAIN
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 impl TrainConfig {
@@ -117,7 +140,12 @@ impl Default for TrainConfig {
 }
 
 // Train the NN
-fn train(config: TrainConfig) -> Result<(), Error> {
+fn train(config: Box<dyn Config>) -> Result<(), Error> {
+    let config = match config.as_any().downcast_ref::<TrainConfig>() {
+        Some(config) => config,
+        None => panic!("&config isn't a TrainConfig!"),
+    };
+
     println!("Train config is {:#?}", config);
 
     // Create the NN
@@ -133,6 +161,16 @@ fn train(config: TrainConfig) -> Result<(), Error> {
 struct TestConfig {
     mnist_test_data_csv_filename: String,
     model_input_filename: String,
+}
+
+impl Config for TestConfig {
+    fn kind(&self) -> ConfigKind {
+        ConfigKind::TEST
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 impl TestConfig {
@@ -154,7 +192,12 @@ impl Default for TestConfig {
 }
 
 // Test the NN
-fn test(config: TestConfig) -> Result<(), Error> {
+fn test(config: Box<dyn Config>) -> Result<(), Error> {
+    let config = match config.as_any().downcast_ref::<TestConfig>() {
+        Some(config) => config,
+        None => panic!("&config isn't a TestConfig!"),
+    };
+
     println!("Test config is {:#?}", config);
 
     // Load the model
@@ -172,6 +215,16 @@ fn test(config: TestConfig) -> Result<(), Error> {
 struct InferConfig {
     model_input_filename: String,
     png_input_filename: String,
+}
+
+impl Config for InferConfig {
+    fn kind(&self) -> ConfigKind {
+        ConfigKind::INFER
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 impl InferConfig {
@@ -193,7 +246,12 @@ impl Default for InferConfig {
 }
 
 // Infer a new handwritten digit
-fn infer(config: InferConfig) -> Result<(), Error> {
+fn infer(config: Box<dyn Config>) -> Result<(), Error> {
+    let config = match config.as_any().downcast_ref::<InferConfig>() {
+        Some(config) => config,
+        None => panic!("&config isn't a InferConfig!"),
+    };
+
     println!("Inter config is {:#?}", config);
 
     // Load the model
@@ -208,7 +266,7 @@ fn infer(config: InferConfig) -> Result<(), Error> {
 fn main() -> Result<(), Error> {
     let app = App::parse();
 
-    match &app.command {
+    let config: Box<dyn Config> = match &app.command {
         Commands::Train {
             input_nodes,
             hidden_nodes,
@@ -227,21 +285,30 @@ fn main() -> Result<(), Error> {
                 *num_training_epochs,
                 model_output_filename,
             );
-            train(config)
+            Box::new(config)
+            // train(config)
         }
         Commands::Test {
             mnist_test_data_csv_filename,
             model_input_filename,
         } => {
             let config = TestConfig::new(mnist_test_data_csv_filename, model_input_filename);
-            test(config)
+            Box::new(config)
+            // test(config)
         }
         Commands::Infer {
             model_input_filename,
             png_input_filename,
         } => {
             let config = InferConfig::new(model_input_filename, png_input_filename);
-            infer(config)
+            Box::new(config)
+            // infer(config)
         }
+    };
+
+    match config.kind() {
+        ConfigKind::TRAIN => train(config),
+        ConfigKind::TEST => test(config),
+        ConfigKind::INFER => infer(config),
     }
 }
