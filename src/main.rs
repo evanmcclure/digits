@@ -1,10 +1,9 @@
-use std::any::Any;
 use std::io::Error;
 
 use clap::*;
 
-include!("config.rs");
 include!("infer.rs");
+include!("neural_network.rs");
 include!("test.rs");
 include!("train.rs");
 
@@ -92,7 +91,7 @@ enum Commands {
 fn main() -> Result<(), Error> {
     let app = App::parse();
 
-    let config: Box<dyn Config> = match &app.command {
+    match &app.command {
         Commands::Train {
             input_nodes,
             hidden_nodes,
@@ -102,45 +101,29 @@ fn main() -> Result<(), Error> {
             num_training_epochs,
             model_output_filename,
             processor,
-        } => {
-            let config = TrainConfig::new(
-                *input_nodes,
-                *hidden_nodes,
-                *output_nodes,
-                *learning_rate,
-                mnist_training_data_csv_filename,
-                *num_training_epochs,
-                model_output_filename,
-                processor.clone(),
-            );
-            Box::new(config)
-        }
+        } => train(
+            *input_nodes,
+            *hidden_nodes,
+            *output_nodes,
+            *learning_rate,
+            mnist_training_data_csv_filename,
+            *num_training_epochs,
+            model_output_filename,
+            processor.clone(),
+        ),
         Commands::Test {
             mnist_test_data_csv_filename,
             model_input_filename,
             processor,
-        } => {
-            let config = TestConfig::new(
-                mnist_test_data_csv_filename,
-                model_input_filename,
-                processor.clone(),
-            );
-            Box::new(config)
-        }
+        } => test(
+            mnist_test_data_csv_filename,
+            model_input_filename,
+            processor.clone(),
+        ),
         Commands::Infer {
             model_input_filename,
             png_input_filename,
             processor,
-        } => {
-            let config =
-                InferConfig::new(model_input_filename, png_input_filename, processor.clone());
-            Box::new(config)
-        }
-    };
-
-    match config.kind() {
-        ConfigKind::TRAIN => train(config),
-        ConfigKind::TEST => test(config),
-        ConfigKind::INFER => infer(config),
+        } => infer(model_input_filename, png_input_filename, processor.clone()),
     }
 }

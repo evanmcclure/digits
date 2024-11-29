@@ -1,19 +1,17 @@
 // infer.rs
 
 // Infer a new handwritten digit
-fn infer(config: Box<dyn Config>) -> Result<(), Error> {
-    let config = match config.as_any().downcast_ref::<InferConfig>() {
-        Some(config) => config,
-        None => panic!("&config isn't a InferConfig!"),
-    };
-
-    println!("Inter config is {:#?}", config);
-
+fn infer(model_input_filename: &str, png_input_filename: &str, processor: Processor) -> Result<(), Error> {
     // Load the model
 
-    // Create the NN
+    // Create the NN from a pre-existing model
+    let model = Model{};
+    let nn = NeuralNetwork::fromModel(model);
 
     // Read an image and infer the digit
+    let outputs = nn.query();
+
+    // println!("label is {}", label);
 
     Ok(())
 }

@@ -1,19 +1,16 @@
 // test.rs
 
 // Test the NN
-fn test(config: Box<dyn Config>) -> Result<(), Error> {
-    let config = match config.as_any().downcast_ref::<TestConfig>() {
-        Some(config) => config,
-        None => panic!("&config isn't a TestConfig!"),
-    };
-
-    println!("Test config is {:#?}", config);
-
+fn test(mnist_test_data_csv_filename: &str, model_input_filename: &str, processor: Processor) -> Result<(), Error> {
     // Load the model
 
-    // Create the NN
+    // Create the NN from a pre-existing model
+    let model = Model{};
+    let nn = NeuralNetwork::fromModel(model);
 
     // Load the test data CSV
+
+    // Test
 
     // Calculate the performance score
 
