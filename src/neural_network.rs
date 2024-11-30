@@ -21,7 +21,7 @@ impl NeuralNetwork {
         }
     }
 
-    pub fn fromModel(model: Model) -> Self {
+    pub fn from_model(model: Model) -> Self {
         NeuralNetwork {
             input_nodes: 0,
             hidden_nodes: 0,

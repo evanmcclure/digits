@@ -6,7 +6,7 @@ fn infer(model_input_filename: &str, png_input_filename: &str, processor: Proces
 
     // Create the NN from a pre-existing model
     let model = Model{};
-    let nn = NeuralNetwork::fromModel(model);
+    let nn = NeuralNetwork::from_model(model);
 
     // Read an image and infer the digit
     let outputs = nn.query();
